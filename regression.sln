@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30011.22
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "regression", "regression.vcxproj", "{A1FA9E40-F7F1-37A7-B7E0-892CB0C8AC58}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A1FA9E40-F7F1-37A7-B7E0-892CB0C8AC58}.Debug|x64.ActiveCfg = Debug|x64
+		{A1FA9E40-F7F1-37A7-B7E0-892CB0C8AC58}.Debug|x64.Build.0 = Debug|x64
+		{A1FA9E40-F7F1-37A7-B7E0-892CB0C8AC58}.Release|x64.ActiveCfg = Release|x64
+		{A1FA9E40-F7F1-37A7-B7E0-892CB0C8AC58}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {00E2AAA6-233C-4A8A-89FD-666205F80B3D}
+	EndGlobalSection
+EndGlobal
