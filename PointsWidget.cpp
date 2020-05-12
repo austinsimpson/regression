@@ -11,15 +11,14 @@
 constexpr int kGridIncrement = 1;
 constexpr auto kE = 2.71828182845904523536;
 constexpr auto kPi = 3.1415;
-constexpr auto kAxisTextMargins = 5.0;
+constexpr auto kAxisTextMargins = 5.;
 
-constexpr auto kGridRemoveThreshold = 100.0;
-constexpr auto kGridAddThreshold = 150;
+constexpr auto kGridUpdateThreshold = 100.;
 
 const QMap<int, int> kMajorIndexForIncrementBase = {
     {1, 5},
-    {2, 10},
-    {5, 26}
+    {2, 4},
+    {5, 5}
 };
 
 PointsWidget::PointsWidget
@@ -39,6 +38,12 @@ PointsWidget::PointsWidget
     ///setCursor(Qt::BlankCursor);
 
     computeTransform();
+
+    _majorGridlinePen.setColor(QColor(25, 25, 25));
+    _majorGridlinePen.setWidth(1);
+
+    _minorGridlinePen.setColor(Qt::lightGray);
+    _minorGridlinePen.setWidth(1);
 }
 
 
@@ -78,34 +83,41 @@ void PointsWidget::drawGrid(QPainter& painter)
     {
         painter.begin(this);
     }
+    const auto logicalLineMajorIncrement = _currentIncrementBase * pow(10, _currentIncrementExponent);
+    const double logicalLineMinorIncrement = static_cast<double>(logicalLineMajorIncrement) / kMajorIndexForIncrementBase[_currentIncrementBase];
+    
+    const auto firstVerticalLineCoord = _logicalBounds.left() - fmod(_logicalBounds.left(), logicalLineMinorIncrement);
+    const auto numberOfVerticalLines = static_cast<int>(_logicalBounds.width() / logicalLineMinorIncrement);
 
-    auto numberOfVerticalLines = static_cast<int>(_logicalBounds.width() * kMajorIndexForIncrementBase[_currentIncrementBase] / (_currentIncrementBase * pow(10, _currentIncrementExponent)));
-
-    for (int i = _logicalBounds.left() - static_cast<int>(_logicalBounds.left()) % _currentIncrementBase; i < _logicalBounds.right(); i += _currentIncrementBase * pow(10, _currentIncrementExponent))
+    for (auto i = 0; i < numberOfVerticalLines; ++i)
     {
-        painter.setPen(penForGridlineIndex(i));
-
-        if (i % _currentIncrementBase == 0)
+        const auto logicalLinePosition = firstVerticalLineCoord + (i * logicalLineMinorIncrement);
+        if (qFuzzyCompare(fmod(logicalLinePosition, logicalLineMajorIncrement), 0.0))
         {
-            drawMajorGridline(painter, i, Qt::Vertical);
+            painter.setPen(_majorGridlinePen);
+            drawMajorGridline(painter, logicalLinePosition, Qt::Vertical);
         }
         else
         {
-            drawMinorGridline(painter, i, Qt::Vertical);
+            painter.setPen(_minorGridlinePen);
+            drawMinorGridline(painter, logicalLinePosition, Qt::Vertical);
         }
     }
     
-    for (int i = _logicalBounds.top() - static_cast<int>(_logicalBounds.top()) % _currentIncrementBase; i < _logicalBounds.bottom(); i += _currentIncrementBase * pow(10, _currentIncrementExponent))
+    const auto firstHorizontalLineCoord = _logicalBounds.top() - fmod(_logicalBounds.top(), logicalLineMinorIncrement);
+    const auto numberOfHorizontalLines = static_cast<int>(_logicalBounds.height() / logicalLineMinorIncrement);
+    for (auto i = 0; i < numberOfHorizontalLines; ++i)
     {
-        painter.setPen(penForGridlineIndex(i / kGridIncrement));
-
-        if (i % _currentIncrementBase == 0)
+        const auto logicalLinePosition = firstHorizontalLineCoord + (i * logicalLineMinorIncrement);
+        if (qFuzzyCompare(fmod(logicalLinePosition, logicalLineMajorIncrement), 0.0))
         {
-            drawMajorGridline(painter, i, Qt::Horizontal);
+            painter.setPen(_majorGridlinePen);
+            drawMajorGridline(painter, logicalLinePosition, Qt::Horizontal);
         }
         else
         {
-            drawMinorGridline(painter, i, Qt::Horizontal);
+            painter.setPen(_minorGridlinePen);
+            drawMinorGridline(painter, logicalLinePosition, Qt::Horizontal);
         }
     }
 
@@ -121,7 +133,7 @@ void PointsWidget::drawGrid(QPainter& painter)
 void PointsWidget::drawMinorGridline
 (
     QPainter& painter, 
-    int index, 
+    qreal logicalPosition, 
     Qt::Orientation orientation
 )
 {
@@ -129,15 +141,15 @@ void PointsWidget::drawMinorGridline
     {
         case Qt::Horizontal:
         {
-            QPointF left(_logicalBounds.left(), index);
-            QPointF right(_logicalBounds.right(), index);
+            QPointF left(_logicalBounds.left(), logicalPosition);
+            QPointF right(_logicalBounds.right(), logicalPosition);
             painter.drawLine(_viewportTransform.map(left), _viewportTransform.map(right));
             break;
         }
         case Qt::Vertical:
         {
-            QPointF top(index, _logicalBounds.top());
-            QPointF bottom(QPointF(index, _logicalBounds.bottom()));
+            QPointF top(logicalPosition, _logicalBounds.top());
+            QPointF bottom(QPointF(logicalPosition, _logicalBounds.bottom()));
             painter.drawLine(_viewportTransform.map(top), _viewportTransform.map(bottom));
             break;
         }
@@ -147,12 +159,12 @@ void PointsWidget::drawMinorGridline
 void PointsWidget::drawMajorGridline
 (
     QPainter& painter, 
-    int index, 
+    qreal logicalPosition, 
     Qt::Orientation orientation
 )
 {
     //First we get some information about the text and what it looks like in the pixel space.
-    const auto numberAsString = QString::number(index);
+    const auto numberAsString = QString::number(logicalPosition);
     const auto textWidthInPixelSpace = QFontMetricsF(painter.font()).width(numberAsString);
     const auto textHeightInPixelSpace = orientation == Qt::Horizontal ? QFontMetricsF(painter.font()).capHeight() : QFontMetricsF(painter.font()).height();
 
@@ -161,37 +173,37 @@ void PointsWidget::drawMajorGridline
     {
         case Qt::Orientation::Horizontal:
         {
-            textCoords = _viewportTransform.map(QPointF(0.0, index));
+            textCoords = _viewportTransform.map(QPointF(0.0, logicalPosition));
             textCoords.rx() -= textWidthInPixelSpace + kAxisTextMargins;
             textCoords.ry() += textHeightInPixelSpace / 2;
 
-            const QPointF left(_logicalBounds.left(), index);
+            const QPointF left(_logicalBounds.left(), logicalPosition);
             QPointF textLeft = textCoords;
             textLeft.rx() -= kAxisTextMargins;
             textLeft.ry() -= textHeightInPixelSpace / 2;
             painter.drawLine(_viewportTransform.map(left), textLeft);
 
-            QPointF onAxis(0.0, index);
-            QPointF right(_logicalBounds.right(), index);
+            QPointF onAxis(0.0, logicalPosition);
+            QPointF right(_logicalBounds.right(), logicalPosition);
             painter.drawLine(_viewportTransform.map(onAxis), _viewportTransform.map(right));
             break;
         }
       
         case Qt::Orientation::Vertical:
         {
-            textCoords = _viewportTransform.map(QPointF(index, 0.0));
+            textCoords = _viewportTransform.map(QPointF(logicalPosition, 0.0));
             textCoords.rx() -= textWidthInPixelSpace / 2;
             textCoords.ry() += textHeightInPixelSpace + kAxisTextMargins;
 
             //I know this reads really weird, but Qt's Rectangle class's bottom is larger than the top. So the bottom is the effective top. Fun.
 
-            const QPointF top(index, _logicalBounds.bottom());
-            const QPointF onAxis(index, 0.0);
+            const QPointF top(logicalPosition, _logicalBounds.bottom());
+            const QPointF onAxis(logicalPosition, 0.0);
 
             QPointF textBottom = textCoords;
             textBottom.ry() += textHeightInPixelSpace;
             textBottom.rx() += textWidthInPixelSpace / 2;
-            const QPointF bottom(QPointF(index, _logicalBounds.top()));
+            const QPointF bottom(QPointF(logicalPosition, _logicalBounds.top()));
             
             painter.drawLine(_viewportTransform.map(top), _viewportTransform.map(onAxis));
             painter.drawLine(textBottom, _viewportTransform.map(bottom));
@@ -200,38 +212,40 @@ void PointsWidget::drawMajorGridline
             break;
         }
     }
-    if (index != 0)
+    if (abs(logicalPosition) > 0.000000001)
         painter.drawText(textCoords, numberAsString);
 }
 
-void PointsWidget::adjustGridlineScale()
+void PointsWidget::adjustGridlineScale(bool didZoomOut)
 {
     const QPointF origin(0.0, 0.0);
-    const QPointF firstGridline(_currentIncrementBase, 0.0);
+    const QPointF firstGridline(_currentIncrementBase  * pow(10, _currentIncrementExponent), 0.0);
 
     const auto mappedOrigin = _viewportTransform.map(origin);
     const auto mappedFirstGrid = _viewportTransform.map(firstGridline);
 
     const auto horizontalDistance = mappedFirstGrid.x() - mappedOrigin.x();
-    if (horizontalDistance < kGridRemoveThreshold) 
-    {
-        switch (_currentIncrementBase)
+    if (didZoomOut) {
+        if (horizontalDistance < kGridUpdateThreshold)
         {
-        case 1:
-            _currentIncrementBase = 2;
-            break;
-        case 2:
-            _currentIncrementBase = 5;
-            break;
-        case 5:
-            _currentIncrementBase = 1;
-            _currentIncrementExponent++;
-            break;
-        default:
-            throw;
+            switch (_currentIncrementBase)
+            {
+            case 1:
+                _currentIncrementBase = 2;
+                break;
+            case 2:
+                _currentIncrementBase = 5;
+                break;
+            case 5:
+                _currentIncrementBase = 1;
+                _currentIncrementExponent++;
+                break;
+            default:
+                throw;
+            }
         }
     }
-    else if (horizontalDistance > kGridAddThreshold) 
+    else if (horizontalDistance > 200.0) 
     {
         switch (_currentIncrementBase)
         {
@@ -249,31 +263,6 @@ void PointsWidget::adjustGridlineScale()
             throw;
         }
     }
-}
-
-QPen PointsWidget::penForGridlineIndex
-(
-    int index
-)
-{
-    QPen pen;
-    pen.setStyle(Qt::PenStyle::SolidLine);
-    if (index == 0) 
-    {
-        pen.setColor(Qt::black);
-        pen.setWidth(2);
-    }
-    else if (index % kMajorIndexForIncrementBase[_currentIncrementBase] == 0)
-    {
-        pen.setColor(QColor(25, 25, 25));
-        pen.setWidth(1);
-    }
-    else
-    {
-        pen.setColor(Qt::lightGray);
-        pen.setWidth(1);
-    }
-    return pen;
 }
 
 void PointsWidget::mousePressEvent
@@ -335,7 +324,7 @@ void PointsWidget::wheelEvent
 
     _mouseLocation = _inverseViewportTransform.map(wheelEvent->position());
 
-    adjustGridlineScale();
+    adjustGridlineScale(wheelEvent->delta() < 0);
     update();
 }
 

@@ -4,6 +4,7 @@
 #include <QWidget>
 
 #include <QVector>
+#include <QPen>
 #include <QPoint>
 
 
@@ -34,16 +35,13 @@ private:
     QRectF visibleBounds() const;
 
     void drawGrid(QPainter& painter);
-    void drawMinorGridline(QPainter& painter, int index, Qt::Orientation orientation);
-    void drawMajorGridline(QPainter& painter, int index, Qt::Orientation orientation);
-    void adjustGridlineScale();
+    void drawMinorGridline(QPainter& painter, qreal logicalPosition, Qt::Orientation orientation);
+    void drawMajorGridline(QPainter& painter, qreal logicalPosition, Qt::Orientation orientation);
+    void adjustGridlineScale(bool didZoomOut);
 
     void computeTransform();
 
     QPointF _zoomCenterInPixelSpace;
-
-
-    QPen penForGridlineIndex(int index);
 
     uint8_t _currentIncrementBase;
     int32_t _currentIncrementExponent;
@@ -61,6 +59,9 @@ private:
     QPointF _zoomCenter;
 
     QRectF _logicalBounds;
+
+    QPen _majorGridlinePen;
+    QPen _minorGridlinePen;
 };
 
 #endif // POINTSWIDGET_H
