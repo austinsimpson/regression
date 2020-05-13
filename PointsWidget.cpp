@@ -15,10 +15,13 @@ constexpr auto kAxisTextMargins = 5.;
 
 constexpr auto kGridUpdateThreshold = 100.;
 
+constexpr auto kDefaultPixelScale = 50.;
+
+//This tells us how many minor lines we want to draw before each major lines
 const QMap<int, int> kMajorIndexForIncrementBase = {
-    {1, 5},
-    {2, 4},
-    {5, 5}
+    {1, 5}, //This means every fifth line should be a major line
+    {2, 4}, //This means every fourth line should be a major line
+    {5, 5} //Every fifth line should be a major line
 };
 
 PointsWidget::PointsWidget
@@ -83,43 +86,9 @@ void PointsWidget::drawGrid(QPainter& painter)
     {
         painter.begin(this);
     }
-    const auto logicalLineMajorIncrement = _currentIncrementBase * pow(10, _currentIncrementExponent);
-    const double logicalLineMinorIncrement = static_cast<double>(logicalLineMajorIncrement) / kMajorIndexForIncrementBase[_currentIncrementBase];
     
-    const auto firstVerticalLineCoord = _logicalBounds.left() - fmod(_logicalBounds.left(), logicalLineMinorIncrement);
-    const auto numberOfVerticalLines = static_cast<int>(_logicalBounds.width() / logicalLineMinorIncrement);
-
-    for (auto i = 0; i < numberOfVerticalLines; ++i)
-    {
-        const auto logicalLinePosition = firstVerticalLineCoord + (i * logicalLineMinorIncrement);
-        if (qFuzzyCompare(fmod(logicalLinePosition, logicalLineMajorIncrement), 0.0))
-        {
-            painter.setPen(_majorGridlinePen);
-            drawMajorGridline(painter, logicalLinePosition, Qt::Vertical);
-        }
-        else
-        {
-            painter.setPen(_minorGridlinePen);
-            drawMinorGridline(painter, logicalLinePosition, Qt::Vertical);
-        }
-    }
-    
-    const auto firstHorizontalLineCoord = _logicalBounds.top() - fmod(_logicalBounds.top(), logicalLineMinorIncrement);
-    const auto numberOfHorizontalLines = static_cast<int>(_logicalBounds.height() / logicalLineMinorIncrement);
-    for (auto i = 0; i < numberOfHorizontalLines; ++i)
-    {
-        const auto logicalLinePosition = firstHorizontalLineCoord + (i * logicalLineMinorIncrement);
-        if (qFuzzyCompare(fmod(logicalLinePosition, logicalLineMajorIncrement), 0.0))
-        {
-            painter.setPen(_majorGridlinePen);
-            drawMajorGridline(painter, logicalLinePosition, Qt::Horizontal);
-        }
-        else
-        {
-            painter.setPen(_minorGridlinePen);
-            drawMinorGridline(painter, logicalLinePosition, Qt::Horizontal);
-        }
-    }
+    drawAxisLines(painter, Qt::Horizontal);
+    drawAxisLines(painter, Qt::Vertical);
 
     auto pen = painter.pen();
     pen.setWidth(2);
@@ -129,6 +98,37 @@ void PointsWidget::drawGrid(QPainter& painter)
     painter.drawLine(_viewportTransform.map(QPointF(0, _logicalBounds.bottom())), _viewportTransform.map(QPointF(0, _logicalBounds.top())));
     painter.drawLine(_viewportTransform.map(QPointF(_logicalBounds.left(), 0)), _viewportTransform.map(QPointF(_logicalBounds.right(), 0)));
 }
+
+void PointsWidget::drawAxisLines
+(
+    QPainter& painter,
+    Qt::Orientation orientation
+)
+{
+    const auto logicalLineMajorIncrement = _currentIncrementBase * pow(10, _currentIncrementExponent);
+    const auto logicalLineMinorIncrement = static_cast<double>(logicalLineMajorIncrement) / kMajorIndexForIncrementBase[_currentIncrementBase];
+
+    const auto firstLineCoord = orientation == Qt::Vertical ? _logicalBounds.left() - fmod(_logicalBounds.left(), logicalLineMinorIncrement) : _logicalBounds.top() - fmod(_logicalBounds.top(), logicalLineMinorIncrement);
+    const auto numberOfLines = orientation == Qt::Vertical ? static_cast<int>(_logicalBounds.width() / logicalLineMinorIncrement) : static_cast<int>(_logicalBounds.height() / logicalLineMinorIncrement);
+    const auto firstLineIndex = orientation == Qt::Vertical ? static_cast<int>(round(fmod(firstLineCoord, logicalLineMajorIncrement) / logicalLineMinorIncrement)) : static_cast<int>(round(fmod(firstLineCoord, logicalLineMajorIncrement) / logicalLineMinorIncrement));
+
+    for (auto i = firstLineIndex; i < numberOfLines + firstLineIndex + 1; ++i)
+    {
+        const auto logicalLinePosition = firstLineCoord + ((i - firstLineIndex) * logicalLineMinorIncrement);
+
+        if (i % kMajorIndexForIncrementBase[_currentIncrementBase] == 0)
+        {
+            painter.setPen(_majorGridlinePen);
+            drawMajorGridline(painter, logicalLinePosition, orientation);
+        }
+        else
+        {
+            painter.setPen(_minorGridlinePen);
+            drawMinorGridline(painter, logicalLinePosition, orientation);
+        }
+    }
+}
+
 
 void PointsWidget::drawMinorGridline
 (
@@ -340,21 +340,25 @@ void PointsWidget::resizeEvent
 
 void PointsWidget::computeTransform()
 {
+    //First thing we want to do is invert the y-axis to make it consistent with mathematics instead of computer graphics
     QTransform centerOriginTransform;
     centerOriginTransform.scale(1.0, -1.0);
 
+    //Im using regular exp for my zooming function because it is always non-negative and has nice, nonlinear characteristics
     auto zoomScale = exp(_zoomLevel);
 
+    //Maps the logical coordinates to some starting pixel coordinates. Default as of writing is 50, but it becomes irrelevant once we start zooming
     QTransform logicalToViewport;
-    logicalToViewport.scale(50.0, 50.0);
+    logicalToViewport.scale(kDefaultPixelScale, kDefaultPixelScale);
 
+    //I wrote out the zoom transformation as two separate transformations, one for scaling and one for translation
     QTransform zoomScaleTransform;
     zoomScaleTransform.scale(zoomScale, zoomScale);
 
     QTransform zoomCenterTransform;
     zoomCenterTransform.translate(_zoomCenter.x(), _zoomCenter.y());
-    auto zoomInPixelSpace = _viewportTransform.map(_zoomCenter);
     
+    //Stores data for our panning. Sometimes we also use this to store a fudge factor after doing a zoom and forcing pixel coordinates to stay the same
     QTransform translation;
     translation.translate(_translationInPixelSpace.x(), _translationInPixelSpace.y());
 
