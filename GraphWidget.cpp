@@ -1,4 +1,4 @@
-#include "PointsWidget.h"
+#include "GraphWidget.h"
 
 #include <QBitmap>
 #include <QPainter>
@@ -7,6 +7,26 @@
 #include <cmath>
 
 #include <QDebug>
+
+//Copyright(c) 2020 Austin Simpson
+//
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files(the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions :
+//
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+//
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
 
 constexpr int kGridIncrement = 1;
 constexpr auto kE = 2.71828182845904523536;
@@ -24,7 +44,7 @@ const QMap<int, int> kMajorIndexForIncrementBase = {
     {5, 5} //Every fifth line should be a major line
 };
 
-PointsWidget::PointsWidget
+GraphWidget::GraphWidget
 (
     QWidget* parent
 ):
@@ -55,7 +75,7 @@ PointsWidget::PointsWidget
 }
 
 
-void PointsWidget::paintEvent
+void GraphWidget::paintEvent
 (
     QPaintEvent* paintEvent
 )
@@ -85,7 +105,7 @@ void PointsWidget::paintEvent
     painter.end();
 }
 
-void PointsWidget::drawGrid(QPainter& painter)
+void GraphWidget::drawGrid(QPainter& painter)
 {
     if (!painter.isActive())
     {
@@ -104,7 +124,7 @@ void PointsWidget::drawGrid(QPainter& painter)
     painter.drawLine(_viewportTransform.map(QPointF(_logicalBounds.left(), 0)), _viewportTransform.map(QPointF(_logicalBounds.right(), 0)));
 }
 
-void PointsWidget::drawAxisLines
+void GraphWidget::drawAxisLines
 (
     QPainter& painter,
     Qt::Orientation orientation
@@ -135,7 +155,7 @@ void PointsWidget::drawAxisLines
 }
 
 
-void PointsWidget::drawMinorGridline
+void GraphWidget::drawMinorGridline
 (
     QPainter& painter, 
     qreal logicalPosition, 
@@ -161,7 +181,7 @@ void PointsWidget::drawMinorGridline
     }
 }
 
-void PointsWidget::drawMajorGridline
+void GraphWidget::drawMajorGridline
 (
     QPainter& painter, 
     qreal logicalPosition, 
@@ -221,7 +241,7 @@ void PointsWidget::drawMajorGridline
         painter.drawText(textCoords, numberAsString);
 }
 
-void PointsWidget::adjustGridlineScale(bool didZoomOut)
+void GraphWidget::adjustGridlineScale(bool didZoomOut)
 {
     const QPointF origin(0.0, 0.0);
     const QPointF firstGridline(_currentIncrementBase  * pow(10, _currentIncrementExponent), 0.0);
@@ -270,7 +290,7 @@ void PointsWidget::adjustGridlineScale(bool didZoomOut)
     }
 }
 
-void PointsWidget::mousePressEvent
+void GraphWidget::mousePressEvent
 (
     QMouseEvent* mouseEvent
 )
@@ -280,7 +300,7 @@ void PointsWidget::mousePressEvent
     update();
 }
 
-void PointsWidget::mouseMoveEvent
+void GraphWidget::mouseMoveEvent
 (
     QMouseEvent* mouseEvent
 )
@@ -302,7 +322,7 @@ void PointsWidget::mouseMoveEvent
     update();
 }
 
-void PointsWidget::mouseReleaseEvent
+void GraphWidget::mouseReleaseEvent
 (
     QMouseEvent* mouseEvent
 )
@@ -311,7 +331,7 @@ void PointsWidget::mouseReleaseEvent
     update();
 }
 
-void PointsWidget::wheelEvent
+void GraphWidget::wheelEvent
 (
     QWheelEvent* wheelEvent
 )
@@ -333,7 +353,7 @@ void PointsWidget::wheelEvent
     update();
 }
 
-void PointsWidget::resizeEvent
+void GraphWidget::resizeEvent
 (
     QResizeEvent* resizeEvent
 )
@@ -343,7 +363,7 @@ void PointsWidget::resizeEvent
     update();
 }
 
-void PointsWidget::computeTransform()
+void GraphWidget::computeTransform()
 {
     //First thing we want to do is invert the y-axis to make it consistent with mathematics instead of computer graphics
     QTransform centerOriginTransform;
@@ -373,13 +393,13 @@ void PointsWidget::computeTransform()
     _logicalBounds = visibleBounds();
 }
 
-void PointsWidget::reset()
+void GraphWidget::reset()
 {
     _points.clear();
 }
 
 
-void PointsWidget::centerOnLogicalCoordinate
+void GraphWidget::centerOnLogicalCoordinate
 (
     const QPointF& logicalCoordinate
 )
@@ -389,7 +409,7 @@ void PointsWidget::centerOnLogicalCoordinate
     computeTransform();
 }
 
-QRectF PointsWidget::visibleBounds() const
+QRectF GraphWidget::visibleBounds() const
 {
     return _inverseViewportTransform.mapRect(QRectF(0.0, 0.0, width(), height())).normalized();
 }
