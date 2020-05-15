@@ -2,6 +2,7 @@
 #define REGRESSIONTRAINER_H
 
 #include "VectorND.h"
+#include "Range.h"
 
 #include <algorithm>
 
@@ -51,7 +52,7 @@ public:
         if (_trainingPoints.size() == 0)
             return;
 
-        for (auto unused : range(0, numberOfBatches))
+		for (auto _ : range(0, numberOfBatches))
         {
             _weights -= kLearningRate * costDerivative();
         }

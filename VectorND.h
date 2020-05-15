@@ -23,20 +23,42 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-QVector<int> range(int startInclusive, int endExclusive)
-{
-    QVector<int> result(endExclusive - startInclusive);
-    std::iota(result.begin(), result.end(), startInclusive);
-    return result;
-}
+#include "Range.h"
 
 template <int n>
 class VectorND
 {
 public:
     VectorND() : _values(n, 0.0){}
+	VectorND(std::initializer_list<qreal> list)
+	{
+		Q_ASSERT (list.size() == n);
+		for (auto value : list)
+		{
+			_values.push_back(value);
+		}
+	}
+
     VectorND(double fillValue) : _values(n, fillValue) {}
     VectorND(const VectorND<n>& other) : _values(other._values){}
+
+	VectorND<n>& operator= (const VectorND<n>& other)
+	{
+		for (auto index : range(0, n))
+		{
+			_values[index] = other[index];
+		}
+		return *this;
+	}
+
+	VectorND<n>& operator= (std::initializer_list<qreal> list)
+	{
+		Q_ASSERT (list.size() == n);
+		for (auto value : list)
+		{
+			_values.push_back(value);
+		}
+	}
 
     constexpr int dimension() const
     {

@@ -46,6 +46,8 @@ public:
 
     void centerOnLogicalCoordinate(const QPointF& logicalCoord);
 
+	void setPoints(const QVector<QPointF>& points);
+
 public slots:
     void reset();
 signals:

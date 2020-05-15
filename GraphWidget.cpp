@@ -410,3 +410,9 @@ QRectF GraphWidget::visibleBounds() const
 {
     return _inverseViewportTransform.mapRect(QRectF(0.0, 0.0, width(), height())).normalized();
 }
+
+void GraphWidget::setPoints(const QVector<QPointF>& points)
+{
+	_points = points;
+	update();
+}

@@ -8,6 +8,7 @@ SOURCES += \
     main.cpp
 
 HEADERS += \
+    Range.h \
     Regression.h \
     RegressionWindow.h \
     GraphWidget.h \

@@ -1,5 +1,3 @@
-#include "RegressionWindow.h"
-
 //Copyright(c) 2020 Austin Simpson
 //
 //Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,6 +18,12 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
+#include "RegressionWindow.h"
+
+#include <QFileDialog>
+#include <QStandardPaths>
+#include <QTextStream>
+
 RegressionWindow::RegressionWindow
 (
     QWidget* parent
@@ -28,6 +32,8 @@ RegressionWindow::RegressionWindow
     Ui::RegressionWindow()
 {
     setupUi(this);
+
+	connect(_actionOpen, &QAction::triggered, this, &RegressionWindow::browseCsvFile);
 }
 
 RegressionWindow::~RegressionWindow()
@@ -44,7 +50,11 @@ void RegressionWindow::showEvent
 
 void RegressionWindow::browseCsvFile()
 {
-
+	auto filePath = QFileDialog::getOpenFileName(this, "Choose a file containing coordinate pairs", QDir::homePath(), "*.csv");
+	if (filePath != QString(""))
+	{
+		loadCsv(filePath);
+	}
 }
 
 void RegressionWindow::loadCsv
@@ -52,5 +62,24 @@ void RegressionWindow::loadCsv
 	const QString& filePath
 )
 {
-
+	QVector<QPointF> temp;
+	Regression<1>::TrainingPoints result;
+	QFile file(filePath);
+	if (file.open(QIODevice::ReadOnly))
+	{
+		QTextStream textStream(&file);
+		while (textStream.atEnd() == false)
+		{
+			const auto line = textStream.readLine();
+			const auto splitOnComma = line.split(",");
+			if (splitOnComma.length() == 2)
+			{
+				temp.push_back({splitOnComma[0].toDouble(), splitOnComma[1].toDouble()});
+				result.push_back({ splitOnComma[0].toDouble(), splitOnComma[1].toDouble()});
+			}
+		}
+		file.close();
+	}
+	_regression.setTrainingPoints(result);
+	_graphWidget->setPoints(temp);
 }

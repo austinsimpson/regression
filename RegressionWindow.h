@@ -1,9 +1,3 @@
-#ifndef REGRESSIONWINDOW_H
-#define REGRESSIONWINDOW_H
-
-#include <QMainWindow>
-#include "ui_RegressionWindow.h"
-
 //Copyright(c) 2020 Austin Simpson
 //
 //Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,6 +18,14 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
+#ifndef REGRESSIONWINDOW_H
+#define REGRESSIONWINDOW_H
+
+#include <QMainWindow>
+#include "ui_RegressionWindow.h"
+
+#include "Regression.h"
+
 class RegressionWindow : public QMainWindow, Ui::RegressionWindow
 {
     Q_OBJECT
@@ -39,6 +41,8 @@ private slots:
     void browseCsvFile();
 private:
     void loadCsv(const QString& filePath);
+
+	Regression<1> _regression;
    
 };
 
