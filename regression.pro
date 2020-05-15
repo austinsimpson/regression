@@ -4,13 +4,13 @@ CONFIG += c++17
 
 SOURCES += \
     RegressionWindow.cpp \
-    PointsWidget.cpp \
+    GraphWidget.cpp \
     main.cpp
 
 HEADERS += \
     Regression.h \
     RegressionWindow.h \
-    PointsWidget.h \
+    GraphWidget.h \
     VectorND.h
 
 INCLUDEPATH += C:\boost

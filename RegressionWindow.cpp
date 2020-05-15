@@ -39,6 +39,18 @@ void RegressionWindow::showEvent
     QShowEvent* showEvent
 )
 {
-    _pointsWidgets->centerOnLogicalCoordinate(QPointF(0.0, 0.0));
+	_graphWidget->centerOnLogicalCoordinate(QPointF(0.0, 0.0));
 }
 
+void RegressionWindow::browseCsvFile()
+{
+
+}
+
+void RegressionWindow::loadCsv
+(
+	const QString& filePath
+)
+{
+
+}

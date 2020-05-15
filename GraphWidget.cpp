@@ -28,9 +28,6 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-constexpr int kGridIncrement = 1;
-constexpr auto kE = 2.71828182845904523536;
-constexpr auto kPi = 3.1415;
 constexpr auto kAxisTextMargins = 5.;
 
 constexpr auto kGridUpdateThreshold = 100.;
@@ -49,13 +46,13 @@ GraphWidget::GraphWidget
     QWidget* parent
 ):
     QWidget(parent),
-    _pointRadius(3),
-    _mouseLocation(-1, -1),
-    _zoomLevel(0),
-    _translationInPixelSpace(0.0,0.0),
-    _zoomCenter(0, 0),
-    _currentIncrementBase(2),
-    _currentIncrementExponent(0)
+	_currentIncrementBase(2),
+	_currentIncrementExponent(0),
+	_pointRadius(3),
+	_mouseLocation(-1, -1),
+	_zoomLevel(0),
+	_translationInPixelSpace(0.0,0.0),
+	_zoomCenter(0, 0)
 {
     setMouseTracking(true);
     ///setCursor(Qt::BlankCursor);
