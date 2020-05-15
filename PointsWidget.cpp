@@ -47,6 +47,11 @@ PointsWidget::PointsWidget
 
     _minorGridlinePen.setColor(Qt::lightGray);
     _minorGridlinePen.setWidth(1);
+
+    for (auto i = 0.; i < 100; ++i)
+    {
+        _points.push_back({ i / 4, 2 * i });
+    }
 }
 
 

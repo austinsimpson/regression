@@ -14,8 +14,12 @@ public:
 
 
     void showEvent(QShowEvent* showEvent) override;
-private:
 
+private slots:
+    void browseCsvFile();
+private:
+    void loadCsv(const QString& filePath);
+   
 };
 
 #endif // REGRESSIONWINDOW_H
