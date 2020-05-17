@@ -40,8 +40,6 @@ public:
     Regression(){}
     Regression(const TrainingPoints& trainingPoints) : _trainingPoints(trainingPoints) {}
 
-
-
     void setTrainingPoints(const TrainingPoints& trainingPoints)
     {
         _trainingPoints = trainingPoints;
@@ -52,8 +50,9 @@ public:
         if (_trainingPoints.size() == 0)
             return;
 
-		for (auto _ : range(0, numberOfBatches))
-        {
+		for (auto u : range(0, numberOfBatches))
+		{
+			Q_UNUSED(u)
 			_weights -= costDerivative() * kLearningRate;
         }
 		int i = 0;
@@ -84,6 +83,11 @@ public:
         });
         return result / _trainingPoints.size();
     }
+
+	const VectorND<n + 1>& weights() const
+	{
+		return _weights;
+	}
 
 private:
     VectorND<n + 1> _weights; //We add an additional dimension to allow for biasing, IE y-intercept.

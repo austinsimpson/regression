@@ -27,10 +27,7 @@
 #include <QPen>
 #include <QPoint>
 
-#include <memory>
-
-#include "IPointSetModel.h"
-#include "FunctionModel.h"
+#include "GraphLayer.h"
 
 class GraphWidget : public QWidget
 {
@@ -49,7 +46,8 @@ public:
 
     void centerOnLogicalCoordinate(const QPointF& logicalCoord);
 
-	void setModel(std::unique_ptr<IPointSetModel>&& model);
+	void addLayer(const FunctionModel& model);
+	void addLayer(const QVector<QPointF>& points);
 
 public slots:
     void reset();
@@ -75,8 +73,6 @@ private:
     int _pointRadius;
     QPointF _mouseLocation;
 
-	FunctionModel _pointModel;
-
     QTransform _viewportTransform;
     QTransform _inverseViewportTransform;
 
@@ -88,6 +84,8 @@ private:
 
     QPen _majorGridlinePen;
     QPen _minorGridlinePen;
+
+	std::vector<GraphLayer> _layers;
 };
 
 #endif // POINTSWIDGET_H

@@ -30,9 +30,12 @@ typedef std::function<qreal(qreal)> RealValuedFunction;
 class FunctionModel
 {
 public:
+	FunctionModel();
 	FunctionModel(RealValuedFunction function);
 
-	qreal value(qreal input);
+	qreal operator()(qreal input) const;
+
+	qreal value(qreal input) const;
 
 private:
 	RealValuedFunction _function;

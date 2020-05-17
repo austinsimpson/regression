@@ -4,6 +4,7 @@ CONFIG += c++17
 
 SOURCES += \
     FunctionModel.cpp \
+    GraphLayer.cpp \
     PointSetModel.cpp \
     RegressionWindow.cpp \
     GraphWidget.cpp \
@@ -11,6 +12,7 @@ SOURCES += \
 
 HEADERS += \
     FunctionModel.h \
+    GraphLayer.h \
     IPointSetModel.h \
     PointSetModel.h \
     Range.h \

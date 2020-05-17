@@ -46,6 +46,7 @@ void RegressionWindow::showEvent
     QShowEvent* showEvent
 )
 {
+	Q_UNUSED(showEvent);
 	_graphWidget->centerOnLogicalCoordinate(QPointF(0.0, 0.0));
 }
 
@@ -85,8 +86,13 @@ void RegressionWindow::loadCsv
 		file.close();
 	}
 
-	_graphWidget->setModel(std::make_unique<PointSetModel>(modelPoints));
+	_graphWidget->addLayer(modelPoints);
 
 	_regression.setTrainingPoints(result);
 	_regression.train(50);
+
+	_graphWidget->addLayer(FunctionModel([this](qreal input) -> qreal
+	{
+		return _regression.weights()[0] + _regression.weights()[1] * input;
+	}));
 }

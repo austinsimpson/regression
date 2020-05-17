@@ -19,7 +19,7 @@
 //SOFTWARE.
 
 #include "GraphWidget.h"
-#include "IPointSetModel.h"
+#include "PointSetModel.h"
 #include "Range.h"
 
 #include <QBitmap>
@@ -32,7 +32,8 @@
 
 
 constexpr auto kAxisTextMargins = 5.;
-constexpr auto kGridUpdateThreshold = 100.;
+constexpr auto kGridUpdateThresholdLower = 100.;
+constexpr auto kGridUpdateThresholdUpper = 200.;
 constexpr auto kDefaultPixelScale = 50.;
 
 //This tells us how many minor lines we want to draw before each major lines
@@ -53,8 +54,7 @@ GraphWidget::GraphWidget
 	_mouseLocation(-1, -1),
 	_zoomLevel(0),
 	_translationInPixelSpace(0.0,0.0),
-	_zoomCenter(0, 0),
-	_pointModel([](qreal input) { return input < 0 ? 0 : sin(1.0/input); })
+	_zoomCenter(0, 0)
 {
     setMouseTracking(true);
     ///setCursor(Qt::BlankCursor);
@@ -89,21 +89,23 @@ void GraphWidget::paintEvent
 	pen.setWidthF(3.0);
 	pen.setColor(QColor(0, 0, 0));
 	painter.setPen(pen);
-	for (const auto index : range(0, width()))
+
+	for (const auto& layer : _layers)
 	{
-		auto logicalX = 0.;
-		auto throwAway = 0.;
-		_inverseViewportTransform.map(static_cast<qreal>(index), 0, &logicalX, &throwAway);
-		painter.drawPoint(_viewportTransform.map(QPointF{logicalX, _pointModel.value(logicalX)}));
+		layer.draw(painter, _logicalBounds, _viewportTransform);
 	}
+
     painter.end();
 }
 
-void GraphWidget::drawGrid(QPainter& painter)
+void GraphWidget::drawGrid
+(
+	QPainter& painter
+)
 {
     if (!painter.isActive())
     {
-        painter.begin(this);
+		painter.begin(this);
     }
     
     drawAxisLines(painter, Qt::Horizontal);
@@ -225,9 +227,7 @@ void GraphWidget::drawMajorGridline
             const QPointF bottom(QPointF(logicalPosition, _logicalBounds.top()));
             
             painter.drawLine(_viewportTransform.map(top), _viewportTransform.map(onAxis));
-            painter.drawLine(textBottom, _viewportTransform.map(bottom));
-
-            
+            painter.drawLine(textBottom, _viewportTransform.map(bottom)); 
             break;
         }
     }
@@ -245,7 +245,7 @@ void GraphWidget::adjustGridlineScale(bool didZoomOut)
 
     const auto horizontalDistance = mappedFirstGrid.x() - mappedOrigin.x();
     if (didZoomOut) {
-        if (horizontalDistance < kGridUpdateThreshold)
+		if (horizontalDistance < kGridUpdateThresholdLower)
         {
             switch (_currentIncrementBase)
             {
@@ -264,7 +264,7 @@ void GraphWidget::adjustGridlineScale(bool didZoomOut)
             }
         }
     }
-    else if (horizontalDistance > 200.0) 
+	else if (horizontalDistance > kGridUpdateThresholdUpper)
     {
         switch (_currentIncrementBase)
         {
@@ -406,12 +406,19 @@ QRectF GraphWidget::visibleBounds() const
     return _inverseViewportTransform.mapRect(QRectF(0.0, 0.0, width(), height())).normalized();
 }
 
-void GraphWidget::setModel
+void GraphWidget::addLayer
 (
-	std::unique_ptr<IPointSetModel>&& model
+	const FunctionModel& model
 )
 {
-//	_pointModel.reset();
-//	_pointModel = std::move(model);
+	_layers.emplace_back(GraphLayer(model));
+}
+
+void GraphWidget::addLayer
+(
+	const QVector<QPointF>& points
+)
+{
+	_layers.emplace_back(GraphLayer(std::make_unique<PointSetModel>(points)));
 }
 

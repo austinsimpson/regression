@@ -20,6 +20,11 @@
 
 #include "FunctionModel.h"
 
+FunctionModel::FunctionModel() : _function([](qreal input){ return input; })
+{
+
+}
+
 FunctionModel::FunctionModel
 (
 	RealValuedFunction function
@@ -29,7 +34,15 @@ FunctionModel::FunctionModel
 
 }
 
-qreal FunctionModel::value(qreal input)
+qreal FunctionModel::value
+(
+	qreal input
+)	const
+{
+	return _function(input);
+}
+
+qreal FunctionModel::operator()(qreal input) const
 {
 	return _function(input);
 }
