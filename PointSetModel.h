@@ -1,7 +1,3 @@
-#include <QApplication>
-
-#include "RegressionWindow.h"
-
 //Copyright(c) 2020 Austin Simpson
 //
 //Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,10 +18,31 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-int main(int argc, char** argv)
+#ifndef VECTORARRAYMODEL_H
+#define VECTORARRAYMODEL_H
+
+#include "IPointSetModel.h"
+#include "VectorND.h"
+
+class PointSetModel : public IPointSetModel
 {
-    QApplication app(argc, argv);
-	RegressionWindow w;
-	w.show();
-    return app.exec();
-}
+public:
+	PointSetModel(const QVector<VectorND<2>>& vectors);
+	PointSetModel(const QVector<QPointF>& points);
+	PointSetModel(PointSetModel&& other);
+
+	virtual  QVector<QPointF>::iterator begin() override;
+	virtual QVector<QPointF>::const_iterator cbegin() override;
+	virtual QVector<QPointF>::iterator end() override;
+	virtual QVector<QPointF>::const_iterator cend() override;
+
+	virtual size_t count() const  override;
+	virtual const QPointF& get(size_t atIndex) override;
+	virtual void clear() override;
+
+private:
+	QVector<QPointF> _points;
+
+};
+
+#endif // VECTORARRAYMODEL_H

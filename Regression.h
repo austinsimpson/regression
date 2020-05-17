@@ -54,8 +54,10 @@ public:
 
 		for (auto _ : range(0, numberOfBatches))
         {
-            _weights -= kLearningRate * costDerivative();
+			_weights -= costDerivative() * kLearningRate;
         }
+		int i = 0;
+		i++;
     }
 
     qreal evaluate(const VectorND<n>& input) const
@@ -76,9 +78,9 @@ public:
 
     VectorND<n + 1> costDerivative() const
     {
-        qreal result = std::accumulate(_trainingPoints.begin(), _trainingPoints.end(), 0.0, [this](TrainingPoint runningSum, const TrainingPoint& trainingPoint)
+		auto result = std::accumulate(_trainingPoints.begin(), _trainingPoints.end(), VectorND<n+1>(), [this](VectorND<n + 1> runningSum, const TrainingPoint& trainingPoint)
         {
-            return runningSum + trainingPoint.first * (_weights * trainingPoint.first.asHomogenous() - trainingPoint.second);
+			return runningSum + trainingPoint.first.asHomogenous() * (_weights * trainingPoint.first.asHomogenous() - trainingPoint.second);
         });
         return result / _trainingPoints.size();
     }

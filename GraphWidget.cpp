@@ -1,13 +1,3 @@
-#include "GraphWidget.h"
-
-#include <QBitmap>
-#include <QPainter>
-#include <QMouseEvent>
-
-#include <cmath>
-
-#include <QDebug>
-
 //Copyright(c) 2020 Austin Simpson
 //
 //Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -28,10 +18,21 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
+#include "GraphWidget.h"
+#include "IPointSetModel.h"
+#include "Range.h"
+
+#include <QBitmap>
+#include <QPainter>
+#include <QMouseEvent>
+
+#include <cmath>
+
+#include <QDebug>
+
+
 constexpr auto kAxisTextMargins = 5.;
-
 constexpr auto kGridUpdateThreshold = 100.;
-
 constexpr auto kDefaultPixelScale = 50.;
 
 //This tells us how many minor lines we want to draw before each major lines
@@ -52,7 +53,8 @@ GraphWidget::GraphWidget
 	_mouseLocation(-1, -1),
 	_zoomLevel(0),
 	_translationInPixelSpace(0.0,0.0),
-	_zoomCenter(0, 0)
+	_zoomCenter(0, 0),
+	_pointModel([](qreal input) { return input < 0 ? 0 : sin(1.0/input); })
 {
     setMouseTracking(true);
     ///setCursor(Qt::BlankCursor);
@@ -64,11 +66,6 @@ GraphWidget::GraphWidget
 
     _minorGridlinePen.setColor(Qt::lightGray);
     _minorGridlinePen.setWidth(1);
-
-    for (auto i = 0.; i < 100; ++i)
-    {
-        _points.push_back({ i / 4, 2 * i });
-    }
 }
 
 
@@ -81,24 +78,24 @@ void GraphWidget::paintEvent
 
     QPainter painter;
     painter.begin(this);
-    painter.setRenderHint(QPainter::HighQualityAntialiasing);
+	painter.setRenderHint(QPainter::Antialiasing);
     
 	painter.setBrush(Qt::lightGray);
 	painter.fillRect(0, 0, width(), height(), Qt::white);
 
     drawGrid(painter);
 
-    painter.setPen(QColor(0, 0, 0, 126));
-    painter.setBrush(QColor(0, 0, 0, 126));
-
-    for (const auto& point : _points)
-    {
-        if (_logicalBounds.contains(point))
-        {
-            painter.drawEllipse(_viewportTransform.map(point), _pointRadius, _pointRadius);
-        }
-    }
-
+	QPen pen = painter.pen();
+	pen.setWidthF(3.0);
+	pen.setColor(QColor(0, 0, 0));
+	painter.setPen(pen);
+	for (const auto index : range(0, width()))
+	{
+		auto logicalX = 0.;
+		auto throwAway = 0.;
+		_inverseViewportTransform.map(static_cast<qreal>(index), 0, &logicalX, &throwAway);
+		painter.drawPoint(_viewportTransform.map(QPointF{logicalX, _pointModel.value(logicalX)}));
+	}
     painter.end();
 }
 
@@ -333,12 +330,10 @@ void GraphWidget::wheelEvent
     QWheelEvent* wheelEvent
 )
 {
-    const auto oldFactor = exp(_zoomLevel);
     _zoomLevel += (qreal)wheelEvent->delta() / 4000;
 
     _zoomCenter = _inverseViewportTransform.map(wheelEvent->posF());
     computeTransform();
-
 
     const auto newZoomLocation = _viewportTransform.map(_zoomCenter);
     _translationInPixelSpace += wheelEvent->posF() - newZoomLocation;
@@ -392,7 +387,7 @@ void GraphWidget::computeTransform()
 
 void GraphWidget::reset()
 {
-    _points.clear();
+
 }
 
 
@@ -411,8 +406,12 @@ QRectF GraphWidget::visibleBounds() const
     return _inverseViewportTransform.mapRect(QRectF(0.0, 0.0, width(), height())).normalized();
 }
 
-void GraphWidget::setPoints(const QVector<QPointF>& points)
+void GraphWidget::setModel
+(
+	std::unique_ptr<IPointSetModel>&& model
+)
 {
-	_points = points;
-	update();
+//	_pointModel.reset();
+//	_pointModel = std::move(model);
 }
+

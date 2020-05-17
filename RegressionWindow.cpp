@@ -19,6 +19,7 @@
 //SOFTWARE.
 
 #include "RegressionWindow.h"
+#include "PointSetModel.h"
 
 #include <QFileDialog>
 #include <QStandardPaths>
@@ -62,8 +63,8 @@ void RegressionWindow::loadCsv
 	const QString& filePath
 )
 {
-	QVector<QPointF> temp;
 	Regression<1>::TrainingPoints result;
+	QVector<QPointF> modelPoints;
 	QFile file(filePath);
 	if (file.open(QIODevice::ReadOnly))
 	{
@@ -74,12 +75,18 @@ void RegressionWindow::loadCsv
 			const auto splitOnComma = line.split(",");
 			if (splitOnComma.length() == 2)
 			{
-				temp.push_back({splitOnComma[0].toDouble(), splitOnComma[1].toDouble()});
-				result.push_back({ splitOnComma[0].toDouble(), splitOnComma[1].toDouble()});
+				const auto x = splitOnComma[0].toDouble();
+				const auto y = splitOnComma[1].toDouble();
+
+				result.push_back({ x, y});
+				modelPoints.push_back({x, y});
 			}
 		}
 		file.close();
 	}
+
+	_graphWidget->setModel(std::make_unique<PointSetModel>(modelPoints));
+
 	_regression.setTrainingPoints(result);
-	_graphWidget->setPoints(temp);
+	_regression.train(50);
 }

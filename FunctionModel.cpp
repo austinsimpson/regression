@@ -1,7 +1,3 @@
-#include <QApplication>
-
-#include "RegressionWindow.h"
-
 //Copyright(c) 2020 Austin Simpson
 //
 //Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,10 +18,18 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-int main(int argc, char** argv)
+#include "FunctionModel.h"
+
+FunctionModel::FunctionModel
+(
+	RealValuedFunction function
+):
+	_function(function)
 {
-    QApplication app(argc, argv);
-	RegressionWindow w;
-	w.show();
-    return app.exec();
+
+}
+
+qreal FunctionModel::value(qreal input)
+{
+	return _function(input);
 }

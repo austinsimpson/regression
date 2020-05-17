@@ -1,7 +1,3 @@
-#include <QApplication>
-
-#include "RegressionWindow.h"
-
 //Copyright(c) 2020 Austin Simpson
 //
 //Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,10 +18,22 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-int main(int argc, char** argv)
+#ifndef IPOINTMODEL_H
+#define IPOINTMODEL_H
+
+#include <QPointF>
+#include <QVector>
+class IPointSetModel
 {
-    QApplication app(argc, argv);
-	RegressionWindow w;
-	w.show();
-    return app.exec();
-}
+public:
+	virtual QVector<QPointF>::iterator begin() = 0;
+	virtual QVector<QPointF>::const_iterator cbegin() = 0;
+	virtual QVector<QPointF>::iterator end() = 0;
+	virtual QVector<QPointF>::const_iterator cend() = 0;
+
+	virtual size_t count() const = 0;
+	virtual const QPointF& get(size_t atIndex) = 0;
+	virtual void clear() = 0;
+};
+
+#endif // IPOINTMODEL_H

@@ -109,7 +109,7 @@ public:
 
     VectorND<n>& operator-=(const VectorND<n>& other)
     {
-        (*this) += ((-1.0) * other);
+		(*this) += (other * (-1.0));
         return *this;
     }
 
@@ -135,6 +135,11 @@ public:
         return result;
     }
 
+	VectorND<n> operator/(double scalar) const
+	{
+		return operator*(1.0 / scalar);
+	}
+
     VectorND<n + 1> asHomogenous() const
     {
         VectorND<n+1> result(1.0);
@@ -144,13 +149,24 @@ public:
         }
         return result;
     }
+
+	VectorND<n-1> asNonhomogenous() const
+	{
+		VectorND<n-1> result(0.0);
+
+		for (int index : range(1, n))
+		{
+			result[index - 1] = _values[index];
+		}
+		return result;
+	}
 private:
     QVector<qreal> _values;
 };
 
 
-template <size_t n>
-VectorND<n> operator*(double scalar, const VectorND<n>& vector)
+template <size_t m>
+VectorND<m> operator*(double scalar, const VectorND<m>& vector)
 {
     //Since multiplication of vectors and scalars commute, I just define this function in terms of the class function.
     return vector * scalar;

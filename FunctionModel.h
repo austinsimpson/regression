@@ -1,7 +1,3 @@
-#include <QApplication>
-
-#include "RegressionWindow.h"
-
 //Copyright(c) 2020 Austin Simpson
 //
 //Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,10 +18,24 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 
-int main(int argc, char** argv)
+#ifndef FUNCTIONMODEL_H
+#define FUNCTIONMODEL_H
+
+#include "IPointSetModel.h"
+
+#include <functional>
+
+typedef std::function<qreal(qreal)> RealValuedFunction;
+
+class FunctionModel
 {
-    QApplication app(argc, argv);
-	RegressionWindow w;
-	w.show();
-    return app.exec();
-}
+public:
+	FunctionModel(RealValuedFunction function);
+
+	qreal value(qreal input);
+
+private:
+	RealValuedFunction _function;
+};
+
+#endif // FUNCTIONMODEL_H
