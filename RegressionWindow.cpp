@@ -33,7 +33,7 @@ RegressionWindow::RegressionWindow
     Ui::RegressionWindow()
 {
     setupUi(this);
-
+	loadCsv(":/test_data.csv");
 	connect(_actionOpen, &QAction::triggered, this, &RegressionWindow::browseCsvFile);
 }
 

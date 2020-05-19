@@ -25,3 +25,6 @@ INCLUDEPATH += C:\boost
 
 FORMS += \
     RegressionWindow.ui
+
+RESOURCES += \
+    Resources.qrc
