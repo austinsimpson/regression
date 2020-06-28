@@ -36,7 +36,7 @@ public:
 	};
 
 	GraphLayer(const FunctionModel& functionModel);
-	GraphLayer(std::unique_ptr<IPointSetModel> pointModel);
+	GraphLayer(IPointSetModel* pointModel);
 	GraphLayer(GraphLayer&& other);
 	~GraphLayer() = default;
 
@@ -53,7 +53,9 @@ public:
 	void draw(QPainter& painter, const QRectF& logicalBounds = QRectF(0, 0, 0, 0), const QTransform& viewportTransform = QTransform()) const;
 
 private:
-	void drawFunction(QPainter& painter, qreal xLeft, qreal xRight, const QTransform& viewportTransform) const;
+	void drawFunction(QPainter& painter, const QRectF& logicalBounds, const QTransform& viewportTransform) const;
+	QVector<QPointF> buildFunctionImage();
+	qreal getClosestSquaredDistance(const QVector<QPointF>& points, const QPointF& pointOfInterest) const;
 
 	LayerType _layerType;
 	QPen _pen;
@@ -61,7 +63,7 @@ private:
 	bool _isVisible;
 
 	FunctionModel _functionModel;
-	std::unique_ptr<IPointSetModel> _pointsModel;
+	IPointSetModel* _pointsModel;
 
 };
 

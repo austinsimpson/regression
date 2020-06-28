@@ -26,6 +26,8 @@
 class IPointSetModel
 {
 public:
+	IPointSetModel(){};
+	~IPointSetModel() {};
 	virtual QVector<QPointF>::iterator begin() = 0;
 	virtual QVector<QPointF>::const_iterator cbegin() = 0;
 	virtual QVector<QPointF>::iterator end() = 0;

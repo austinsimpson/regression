@@ -20,6 +20,13 @@
 
 #include "FunctionModel.h"
 
+#include <QLinkedList>
+#include <QRectF>
+#include <QPen>
+#include <QTransform>
+
+#include <QDebug>
+
 FunctionModel::FunctionModel() : _function([](qreal input){ return input; })
 {
 
@@ -45,4 +52,75 @@ qreal FunctionModel::value
 qreal FunctionModel::operator()(qreal input) const
 {
 	return _function(input);
+}
+
+QLinkedList<QPointF> FunctionModel::buildImage
+(
+	const QRectF& logicalBounds,
+	const QTransform& logicalToPixelTransform,
+	const QPen& activePen
+)   const
+{
+	QLinkedList<QPointF> result;
+
+	result.push_back(logicalToPixelTransform.map(QPointF{ logicalBounds.left(), _function(logicalBounds.left())}));
+	result.push_back(logicalToPixelTransform.map(QPointF{ logicalBounds.right(), _function(logicalBounds.right())}));
+
+	const auto newPointThreshold = (activePen.widthF() * activePen.widthF()) / 4;
+	const auto inverseTransform = logicalToPixelTransform.inverted();
+
+	QPointF lastAddedPoint{-10000000., -10000000.};
+	auto point = result.begin();
+	while (point != result.end() - 1 && result.count() < 1000)
+	{
+		auto nextPoint = point + 1;
+
+		if (logicalBounds.contains(*nextPoint) == false && logicalBounds.contains(*point))
+		{
+			point++;
+			continue;
+		}
+		bool shouldAddNewPoint = true;
+		while (nextPoint->x() - point->x() < activePen.width() && nextPoint != result.end())
+		{
+			const auto difference = *nextPoint - *point;
+			const auto distanceSquared = QPointF::dotProduct(difference, difference);
+			if (distanceSquared < newPointThreshold)
+			{
+				++point;
+				shouldAddNewPoint = false;
+				break;
+			}
+			else
+			{
+				++nextPoint;
+			}
+		}
+
+		if (shouldAddNewPoint)
+		{
+			nextPoint = point + 1;
+			const qreal xMidPixel = (point->x() + nextPoint->x()) / 2;
+			const qreal unused = 0.0;
+
+			qreal xMidLogical;
+			qreal unusedLogical;
+			inverseTransform.map(xMidPixel, unused, &xMidLogical, &unusedLogical);
+
+			const auto logicalPoint = QPointF{ xMidLogical, _function(xMidLogical) };
+
+			if (logicalPoint == lastAddedPoint)
+			{
+				++point;
+			}
+			else
+			{
+				result.insert(point + 1, logicalToPixelTransform.map(logicalPoint));
+				lastAddedPoint = logicalPoint;
+			}
+		}
+	}
+
+
+	return result;
 }

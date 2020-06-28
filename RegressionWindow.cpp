@@ -91,8 +91,9 @@ void RegressionWindow::loadCsv
 	_regression.setTrainingPoints(result);
 	_regression.train(50);
 
-	_graphWidget->addLayer(FunctionModel([this](qreal input) -> qreal
+	_graphWidget->addLayer(FunctionModel([](qreal input) -> qreal
 	{
-		return _regression.weights()[0] + _regression.weights()[1] * input;
+		return input <= 0. ? 10. :  sin(1./input);
+	//	return _regression.weights()[0] + _regression.weights()[1] * input;
 	}));
 }

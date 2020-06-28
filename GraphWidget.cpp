@@ -52,7 +52,7 @@ GraphWidget::GraphWidget
 	_currentIncrementExponent(0),
 	_pointRadius(3),
 	_mouseLocation(-1, -1),
-	_zoomLevel(0),
+	_zoomLevel(100),
 	_translationInPixelSpace(0.0,0.0),
 	_zoomCenter(0, 0)
 {
@@ -66,6 +66,8 @@ GraphWidget::GraphWidget
 
     _minorGridlinePen.setColor(Qt::lightGray);
     _minorGridlinePen.setWidth(1);
+
+	update();
 }
 
 
@@ -300,20 +302,16 @@ void GraphWidget::mouseMoveEvent
 )
 {
     const auto newMouseLocation = mouseEvent->localPos();
-    //newMouseLocation.ry();
     if (mouseEvent->buttons().testFlag(Qt::LeftButton))
     {
         const auto mousePosTemp = _mouseLocation;
         auto difference = newMouseLocation - _viewportTransform.map(mousePosTemp);
-        //if (QPointF::dotProduct(difference, difference) < 100)
-        {
-            _translationInPixelSpace += difference;
-            computeTransform();
-        }
+		_translationInPixelSpace += difference;
+		computeTransform();
+		update();
     }
 
     _mouseLocation = _inverseViewportTransform.map(newMouseLocation);
-    update();
 }
 
 void GraphWidget::mouseReleaseEvent
@@ -419,6 +417,6 @@ void GraphWidget::addLayer
 	const QVector<QPointF>& points
 )
 {
-	_layers.emplace_back(GraphLayer(std::make_unique<PointSetModel>(points)));
+	_layers.emplace_back(GraphLayer(new PointSetModel(points)));
 }
 

@@ -24,6 +24,8 @@
 #include "IPointSetModel.h"
 
 #include <functional>
+#include <QLinkedList>
+#include <QRectF>
 
 typedef std::function<qreal(qreal)> RealValuedFunction;
 
@@ -34,8 +36,9 @@ public:
 	FunctionModel(RealValuedFunction function);
 
 	qreal operator()(qreal input) const;
-
 	qreal value(qreal input) const;
+
+	QLinkedList<QPointF> buildImage(const QRectF& logicalBounds, const QTransform& logicalToPixelTransform, const QPen& activePen) const;
 
 private:
 	RealValuedFunction _function;

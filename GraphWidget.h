@@ -60,7 +60,7 @@ private:
     void drawGrid(QPainter& painter);
     void drawAxisLines(QPainter& painter, Qt::Orientation orientation);
     void drawMinorGridline(QPainter& painter, qreal logicalPosition, Qt::Orientation orientation);
-    void drawMajorGridline(QPainter& painter, qreal logicalPosition, Qt::Orientation orientation);
+	void drawMajorGridline(QPainter& painter, qreal logicalPosition, Qt::Orientation orientation);
     void adjustGridlineScale(bool didZoomOut);
 
     void computeTransform();
