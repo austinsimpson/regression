@@ -27,6 +27,9 @@
 
 #include <QDebug>
 
+constexpr auto kXNeighborhoodTriggerDistance = 0.005;
+constexpr auto kMaxNeighborhoodDistance = 200.0;
+
 FunctionModel::FunctionModel() : _function([](qreal input){ return input; })
 {
 
@@ -69,10 +72,15 @@ QLinkedList<QPointF> FunctionModel::buildImage
 	const auto newPointThreshold = (activePen.widthF() * activePen.widthF()) / 4;
 	const auto inverseTransform = logicalToPixelTransform.inverted();
 
-	QPointF lastAddedPoint{-10000000., -10000000.};
 	auto point = result.begin();
-	while (point != result.end() - 1 && result.count() < 1000)
+	while (point != result.end() - 1)
 	{
+		if (result.count() == 540)
+		{
+			int i = 0;
+			++i;
+		}
+
 		auto nextPoint = point + 1;
 
 		if (logicalBounds.contains(*nextPoint) == false && logicalBounds.contains(*point))
@@ -80,12 +88,14 @@ QLinkedList<QPointF> FunctionModel::buildImage
 			point++;
 			continue;
 		}
+
 		bool shouldAddNewPoint = true;
-		while (nextPoint->x() - point->x() < activePen.width() && nextPoint != result.end())
+		const auto xDifference = nextPoint->x() - point->x();
+		while (xDifference < activePen.width() && nextPoint != result.end())
 		{
 			const auto difference = *nextPoint - *point;
 			const auto distanceSquared = QPointF::dotProduct(difference, difference);
-			if (distanceSquared < newPointThreshold)
+			if (distanceSquared < newPointThreshold || (xDifference < kXNeighborhoodTriggerDistance && distanceSquared > kMaxNeighborhoodDistance))
 			{
 				++point;
 				shouldAddNewPoint = false;
@@ -109,15 +119,8 @@ QLinkedList<QPointF> FunctionModel::buildImage
 
 			const auto logicalPoint = QPointF{ xMidLogical, _function(xMidLogical) };
 
-			if (logicalPoint == lastAddedPoint)
-			{
-				++point;
-			}
-			else
-			{
-				result.insert(point + 1, logicalToPixelTransform.map(logicalPoint));
-				lastAddedPoint = logicalPoint;
-			}
+			result.insert(point + 1, logicalToPixelTransform.map(logicalPoint));
+
 		}
 	}
 
